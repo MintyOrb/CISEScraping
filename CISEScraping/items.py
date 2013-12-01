@@ -10,6 +10,6 @@ class CISEDeadLinks(Item):
     referrer = Field()
 
 class CISEOldPages(Item):
-    URL = Field()
+    url = Field()
     lastUpdated = Field()
     
