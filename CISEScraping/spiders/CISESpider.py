@@ -3,6 +3,7 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 from scrapy.selector import Selector
 from scrapy.item import CISEDeadLinks, CISEOldPages
+import urlparse
 import datetime
 
 
@@ -46,13 +47,15 @@ class CISESpider(CrawlSpider):
                     
                     return oldPage  
 
-            # get new links and yield new requests
+            # get links from the page and yield new requests
 
                 pageLinks = sel.Select("//a/@href").extract()
                 for link in pageLinks:
-                    if !("http" in link)
+                    if "http://" not in link:
+                        link = urlparse.urljoin(response.url, link.strip())
                 for link in pageLinks:
-                    yield request()
+                    if "mailto" not in link:
+                        yield request(url=link, callback=self.parse_response)
 
 
         else:
@@ -66,9 +69,6 @@ class CISESpider(CrawlSpider):
 
             return deadLinks
 
-            
-
-        
 
         #allow all domains (to test for broken links) but only get new links if wihtin jmu site 
         #sgml link extractor allow_domains (str or list) -  unique (boolean) – whether duplicate filtering should be applied to extracted links. 
