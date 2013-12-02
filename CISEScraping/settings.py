@@ -10,7 +10,7 @@ BOT_NAME = 'CISEScraping'
 
 SPIDER_MODULES = ['CISEScraping.spiders']
 NEWSPIDER_MODULE = 'CISEScraping.spiders'
-ITEM_PIPELINES = ['saveToFile']
+# ITEM_PIPELINES = ['saveToFile']
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'CISEScraping (+http://www.yourdomain.com)'

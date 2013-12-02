@@ -22,7 +22,7 @@ class CISESpider(BaseSpider):
 
         if response.status == 200:
 
-            if 'jmu.edu' and ('cs' or 'engineering' or 'cise' or 'isat') in response.url:
+            if 'jmu.edu' in response.url and any(name in response.url for name in ('cs' , 'engineering' , 'cise' , 'isat')):
                 
             # scrape date and return item if page is old
 
@@ -51,8 +51,8 @@ class CISESpider(BaseSpider):
                 newLinks = []
                 pageLinks = sel.xpath("//a/@href").extract()
                 for link in pageLinks:
-                    if "http://" or "https://" not in link:
-                        if "mail" not in link and "pdf" not in link and "rtf" not in link and "javascript" not in link:
+                    if "http://" not in link or "https://" not in link:
+                        if not any(name in link for name in ("mail" , "pdf" , "rtf" , "javascript")):
                             newLinks.append(urlparse.urljoin(response.url, link.strip()))
                         
                 
@@ -62,7 +62,7 @@ class CISESpider(BaseSpider):
 
 
         else:
-            # log broken links
+        # log broken links
             deadLinks = CISEDeadLinks()
 
             deadLinks['deadLinkURL'] = response.url

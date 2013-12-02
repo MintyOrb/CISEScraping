@@ -9,14 +9,14 @@
 
 import json
 
-class saveToFile(object):
+# class saveToFile(object):
 
-    def __init__(self):
-        self.file = open('items.jl', 'wb')
+#     def __init__(self):
+#         self.file = open('items.jl', 'wb')
 
-    def process_item(self, item, spider):
-        line = json.dumps(dict(item)) + "\n"
-        self.file.write(line)
-        return item
+#     def process_item(self, item, spider):
+#         line = json.dumps(dict(item)) + "\n"
+#         self.file.write(line)
+#         return item
 
 # write an item to write out the different item 'groups' to seperate files
