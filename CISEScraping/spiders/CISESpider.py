@@ -34,20 +34,20 @@ class CISESpider(BaseSpider):
                     # convert to python time obj
                     lastUpdateTime = datetime.strptime(tempDate, "%A %B %d %Y %I %M %p")
                     # add item if old
-                    if today - lastUpdateTime > timedelta(days=30):
+                    if today - lastUpdateTime > timedelta(days=1):
                         oldPage = CISEOldPages()
     
                         oldPage["url"] = response.url
                         oldPage["lastUpdated"] = lastUpdateStringList[1]
-                        
-                        yield oldPage
+                        print oldPage
+                        return oldPage
                 else:
                     noDate = CISENoDate()
                     noDate['url'] = response.url
-                    yield noDate
+                    return noDate
 
 
-            # get links from the page and yield new requests
+            # get links from the page and return new requests
                 newLinks = []
                 pageLinks = sel.xpath("//a/@href").extract()
                 for link in pageLinks:
@@ -69,12 +69,10 @@ class CISESpider(BaseSpider):
             deadLinks['referrer'] = response.referer
             deadLinks['HTTPStatus'] = response.status
 
-            yield deadLinks
+            return deadLinks
 
             # issues to work out
-        # jmu.edu and 'cs' or 'eng' etc - why only true when in included is first after and?
         # look into item pipeline for sorting items? Write to seperate files 
-
         # div id="pagecontent" h1 title - find internal 404s
         # last updated list - get date every time - use length?
         # functional refactor (less prodecural)
