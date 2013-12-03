@@ -2,7 +2,7 @@ from scrapy.spider import BaseSpider
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import Selector
 from scrapy.http import Request
-from CISEScraping.items import CISEDeadLinks, CISEOldPages, CISENoDate
+from CISEScraping.items import CISEitem
 import urlparse
 from datetime import datetime, timedelta
 
@@ -28,21 +28,26 @@ class CISESpider(BaseSpider):
 
                 today = datetime.today()
 
-                if len(sel.xpath("//div[@id='footer']/child::p[position()=1]/text()").extract()) > 0:
+                if len(sel.xpath("//div[@id='footer']/child::p[position()=1]/text()").extract()) > 0:    
                     lastUpdateStringList = sel.xpath("//div[@id='footer']/child::p[position()=1]/text()").extract()
-                    tempDate = lastUpdateStringList[1].replace(":", " ").replace(",", " ")
+                    tempDate = ""
+                    for item in lastUpdateStringList:
+                        if len(lastUpdateStringList) > len(tempDate):
+                            tempDate = item
+
+                    tempDate = tempDate.replace(":", " ").replace(",", " ")
                     # convert to python time obj
                     lastUpdateTime = datetime.strptime(tempDate, "%A %B %d %Y %I %M %p")
                     # add item if old
-                    if today - lastUpdateTime > timedelta(days=1):
-                        oldPage = CISEOldPages()
+                    if today - lastUpdateTime > timedelta(days=30):
+                        oldPage = CISEitem()
     
                         oldPage["url"] = response.url
                         oldPage["lastUpdated"] = lastUpdateStringList[1]
                         print oldPage
                         return oldPage
                 else:
-                    noDate = CISENoDate()
+                    noDate = CISEitem()
                     noDate['url'] = response.url
                     return noDate
 
@@ -54,35 +59,24 @@ class CISESpider(BaseSpider):
                     if "http://" not in link or "https://" not in link:
                         if not any(name in link for name in ("mail" , "pdf" , "rtf" , "javascript")):
                             newLinks.append(urlparse.urljoin(response.url, link.strip()))
+                    else:
+                        newLinks.append(link)
                         
                 
                 for link in newLinks:   
                     print link
-                    yield Request(url=link, callback=self.parse)
+                    return Request(url=link, callback=self.parse)
 
 
         else:
-        # log broken links
-            deadLinks = CISEDeadLinks()
+        # log broken link
+            deadLinks = CISEitem()
 
-            deadLinks['deadLinkURL'] = response.url
+            deadLinks['url'] = response.url
             deadLinks['referrer'] = response.referer
             deadLinks['HTTPStatus'] = response.status
 
             return deadLinks
-
-            # issues to work out
-        # look into item pipeline for sorting items? Write to seperate files 
-        # div id="pagecontent" h1 title - find internal 404s
-        # last updated list - get date every time - use length?
-        # functional refactor (less prodecural)
-        # add days since update?
-
-        # potential functions:
-            # addDeadLink
-            # addOldPage
-            # addNoDate
-            # getNewLinks
 
 
 
