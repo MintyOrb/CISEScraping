@@ -17,6 +17,18 @@ class CISESpider(BaseSpider):
         'http://www.jmu.edu/engineering'
     ]
 
+    EXCLUDE_FROM_PROCESSING = [
+        "gif" , "jpg" , "doc" , "ppt", "zip", "pptx", "avi" , "pdf" , "rtf",
+        "google" , "facebook" , "digg" , "delicious"
+        "mail" , "javascript" , 
+    ]
+
+    EXCLUDE_FROM_ADDING = [
+        "gif" , "jpg" , "doc" , "ppt", "zip", "pptx", "avi" , "pdf" , "rtf",
+        "google" , "facebook" , "digg" , "delicious"
+        "mail" , "javascript" 
+    ]
+
     def parse(self, response):
 
         sel = Selector(response)
@@ -25,7 +37,7 @@ class CISESpider(BaseSpider):
 
         if response.status == 200:
 
-            if 'jmu.edu' in response.url and any(name in response.url.lower() for name in ('cs.' , 'engineering' , 'cise.' , 'isat.')):
+            if 'jmu.edu' in response.url and any(name in response.url.lower() for name in ('cs.' , 'engineering' , 'cise.' , 'isat.')) and not any(name in response.url.lower() for name in self.EXCLUDE_FROM_PROCESSING):
                 
             # scrape date and return item if page is old or there is no date
 
@@ -51,7 +63,6 @@ class CISESpider(BaseSpider):
                         CrawlItem["lastUpdated"] = readableDate
                         yield CrawlItem
                 else:
-                    
                     CrawlItem['group'] = "No Date On Page"
                     CrawlItem['url'] = response.url
                     yield CrawlItem
@@ -62,7 +73,7 @@ class CISESpider(BaseSpider):
                 pageLinks = sel.xpath("//a/@href").extract()
                 for link in pageLinks:
                     if "http://" not in link or "https://" not in link:
-                        if not any(name in link.lower() for name in ("mail" , "pdf" , "rtf" , "javascript" , "jpg" , "doc")):
+                        if not any(name in link.lower() for name in self.EXCLUDE_FROM_ADDING):
                             newLinks.append(urlparse.urljoin(response.url, link.strip()))
                     else:
                         newLinks.append(link)
@@ -79,3 +90,4 @@ class CISESpider(BaseSpider):
             CrawlItem['referrer'] = response.request.headers['Referer']
 
             yield CrawlItem
+           
