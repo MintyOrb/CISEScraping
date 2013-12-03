@@ -17,16 +17,14 @@ class CISESpider(BaseSpider):
         'http://www.jmu.edu/engineering'
     ]
 
-    EXCLUDE_FROM_PROCESSING = [
-        "gif" , "jpg" , "doc" , "ppt", "zip", "pptx", "avi" , "pdf" , "rtf",
-        "google" , "facebook" , "digg" , "delicious"
-        "mail" , "javascript" , 
+    EXCLUDE_FROM_ADDING = [
+        ".gif" , ".jpg" , ".doc" , ".ppt", ".zip", ".pptx", ".avi" , ".pdf" , ".rtf", ".mov" , ".mp4" , ".xml" , ".dat" , ".nit" , 
+        "google" , "facebook" , "digg" , "delicious" , ".sbx" , ".shp" , ".prj" , ".tgz" , "php?" , ".ps" , ".epx" , ".class" ,
+        "mailto:" , "javascript" , "@" , ".png" , ".sit" , ".shx" , ".sbn" , ".mdb" , ".ldb" , ".tif" , ".tfw" , ".aux" , ".atx" , ".rrd"
     ]
 
-    EXCLUDE_FROM_ADDING = [
-        "gif" , "jpg" , "doc" , "ppt", "zip", "pptx", "avi" , "pdf" , "rtf",
-        "google" , "facebook" , "digg" , "delicious"
-        "mail" , "javascript" 
+    EXCLUDE_FROM_NO_DATE = [
+        "users.cs.jmu" ,  "?"
     ]
 
     def parse(self, response):
@@ -37,7 +35,7 @@ class CISESpider(BaseSpider):
 
         if response.status == 200:
 
-            if 'jmu.edu' in response.url and any(name in response.url.lower() for name in ('cs.' , 'engineering' , 'cise.' , 'isat.')) and not any(name in response.url.lower() for name in self.EXCLUDE_FROM_PROCESSING):
+            if 'jmu.edu' in response.url and any(name in response.url.lower() for name in ('cs.' , 'engineering' , 'cise.' , 'isat.')):
                 
             # scrape date and return item if page is old or there is no date
 
@@ -48,21 +46,23 @@ class CISESpider(BaseSpider):
                     lastUpdateStringList = sel.xpath("//div[@id='footer']/child::p[position()=1]/text()").extract()
                     readableDate = ""
                     # get date in list (location in list differs from page to page)
+                  
                     for item in lastUpdateStringList:
-                        if len(item) > len(readableDate):
+                        if len(item) > 25 and len(item) < 45:
                             readableDate = item
+                            
 
                     tempDate = readableDate.replace(":", " ").replace(",", " ")
                     # convert to python time obj
                     tempDate = datetime.strptime(tempDate, "%A %B %d %Y %I %M %p")
                     # add item if old
-                    if today - tempDate > timedelta(days=30):
+                    if today - tempDate > timedelta(days=90):
 
                         CrawlItem['group'] = "Old Page"
                         CrawlItem["url"] = response.url
                         CrawlItem["lastUpdated"] = readableDate
                         yield CrawlItem
-                else:
+                elif not any(name in response.url for name in self.EXCLUDE_FROM_NO_DATE):
                     CrawlItem['group'] = "No Date On Page"
                     CrawlItem['url'] = response.url
                     yield CrawlItem
