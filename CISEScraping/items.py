@@ -23,7 +23,6 @@ class CISEitem(Item):
 	group = Field()
 	url = Field()
 	referrer = Field()
-	HTTPStatus = Field()
 	lastUpdated = Field()
 	subject = Field()
     # daysSinceUpdated = Field()

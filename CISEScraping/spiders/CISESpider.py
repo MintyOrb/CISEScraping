@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 
 class CISESpider(BaseSpider):
+    handle_httpstatus_list = [404]
     name = 'JMUCISE'
     start_urls = [
         'http://www.cs.jmu.edu',
@@ -20,63 +21,61 @@ class CISESpider(BaseSpider):
 
         sel = Selector(response)
 
+        CrawlItem = CISEitem()
+
         if response.status == 200:
 
-            if 'jmu.edu' in response.url and any(name in response.url for name in ('cs' , 'engineering' , 'cise' , 'isat')):
+            if 'jmu.edu' in response.url and any(name in response.url.lower() for name in ('cs.' , 'engineering' , 'cise.' , 'isat.')):
                 
-            # scrape date and return item if page is old
+            # scrape date and return item if page is old or there is no date
 
                 today = datetime.today()
 
+
                 if len(sel.xpath("//div[@id='footer']/child::p[position()=1]/text()").extract()) > 0:    
                     lastUpdateStringList = sel.xpath("//div[@id='footer']/child::p[position()=1]/text()").extract()
-                    tempDate = ""
+                    readableDate = ""
+                    # get date in list (location in list differs from page to page)
                     for item in lastUpdateStringList:
-                        if len(lastUpdateStringList) > len(tempDate):
-                            tempDate = item
+                        if len(item) > len(readableDate):
+                            readableDate = item
 
-                    tempDate = tempDate.replace(":", " ").replace(",", " ")
+                    tempDate = readableDate.replace(":", " ").replace(",", " ")
                     # convert to python time obj
-                    lastUpdateTime = datetime.strptime(tempDate, "%A %B %d %Y %I %M %p")
+                    tempDate = datetime.strptime(tempDate, "%A %B %d %Y %I %M %p")
                     # add item if old
-                    if today - lastUpdateTime > timedelta(days=30):
-                        oldPage = CISEitem()
-    
-                        oldPage["url"] = response.url
-                        oldPage["lastUpdated"] = lastUpdateStringList[1]
-                        print oldPage
-                        return oldPage
+                    if today - tempDate > timedelta(days=30):
+
+                        CrawlItem['group'] = "Old Page"
+                        CrawlItem["url"] = response.url
+                        CrawlItem["lastUpdated"] = readableDate
+                        yield CrawlItem
                 else:
-                    noDate = CISEitem()
-                    noDate['url'] = response.url
-                    return noDate
+                    
+                    CrawlItem['group'] = "No Date On Page"
+                    CrawlItem['url'] = response.url
+                    yield CrawlItem
 
 
-            # get links from the page and return new requests
+            # get links from the page and yield new requests
                 newLinks = []
                 pageLinks = sel.xpath("//a/@href").extract()
                 for link in pageLinks:
                     if "http://" not in link or "https://" not in link:
-                        if not any(name in link for name in ("mail" , "pdf" , "rtf" , "javascript")):
+                        if not any(name in link.lower() for name in ("mail" , "pdf" , "rtf" , "javascript" , "jpg" , "doc")):
                             newLinks.append(urlparse.urljoin(response.url, link.strip()))
                     else:
                         newLinks.append(link)
                         
                 
                 for link in newLinks:   
-                    print link
-                    return Request(url=link, callback=self.parse)
+                    yield Request(url=link, callback=self.parse)
 
 
-        else:
+        elif response.status == 404:
         # log broken link
-            deadLinks = CISEitem()
+            CrawlItem['group'] = "Page Not Found"
+            CrawlItem['url'] = response.url
+            CrawlItem['referrer'] = response.request.headers['Referer']
 
-            deadLinks['url'] = response.url
-            deadLinks['referrer'] = response.referer
-            deadLinks['HTTPStatus'] = response.status
-
-            return deadLinks
-
-
-
+            yield CrawlItem
