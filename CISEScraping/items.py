@@ -5,6 +5,4 @@ class CISEitem(Item):
 	url = Field()
 	referrer = Field()
 	lastUpdated = Field()
-	subject = Field()
-    # daysSinceUpdated = Field()
 
