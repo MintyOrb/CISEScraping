@@ -12,26 +12,26 @@ class saveToFile(object):
     	self.missing = open('missing_pages.json', 'wb')
 
         # write table headers
-        line = "{0:10} {1:40} {2:} \n\n".format("Domain","Last Updated","URL")
+        line = "{0:15} {1:40} {2:} \n\n".format("Domain","Last Updated","URL")
         self.old.write(line)
 
-        line = "{0:10} {1:} \n\n".format("Domain","URL")
+        line = "{0:15} {1:} \n\n".format("Domain","URL")
         self.date.write(line)
 
-        line = "{0:10} {1:70} {2:} \n\n".format("Domain","Page Containing Broken Link","URL of Broken Link")
+        line = "{0:15} {1:70} {2:} \n\n".format("Domain","Page Containing Broken Link","URL of Broken Link")
         self.missing.write(line)
  
 
     def process_item(self, item, spider):
         
         if item['group'] == "Old Page":
-            line = "{0:10} {1:40} {2:} \n".format(item['domain'],item["lastUpdated"],item["url"])
+            line = "{0:15} {1:40} {2:} \n".format(item['domain'],item["lastUpdated"],item["url"])
             self.old.write(line)
         elif item['group'] == "No Date On Page":
-            line = "{0:10} {1:} \n".format(item['domain'],item["url"])
+            line = "{0:15} {1:} \n".format(item['domain'],item["url"])
             self.date.write(line)
         elif item['group'] == "Page Not Found":
-            line = "{0:10} {1:70} {2:} \n".format(item['domain'],item["referrer"],item["url"])
+            line = "{0:15} {1:70} {2:} \n".format(item['domain'],item["referrer"],item["url"])
             self.missing.write(line)
 
         return item

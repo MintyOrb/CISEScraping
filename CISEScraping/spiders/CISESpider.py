@@ -18,7 +18,7 @@ class CISESpider(BaseSpider):
     ]
 
     EXCLUDE_FROM_ADDING = [
-        ".zip", ".gif" , ".jpg" , ".doc" , ".ppt", ".pptx", ".avi" , ".pdf" , ".rtf", ".mov" , ".mp4" , ".xml" , ".dat" , ".nit" , 
+        ".zip", ".gif" , ".jpg" , ".jpeg" , ".doc" , ".ppt", ".pptx", ".avi" , ".pdf" , ".rtf", ".mov" , ".mp4" , ".xml" , ".dat" , ".nit" , 
         "google" , "facebook" , "digg" , "delicious" , ".sbx" , ".shp" , ".prj" , ".tgz" , "php?" , ".ps" , ".epx" , ".class" , ".dbf" ,
         "mailto:" , "javascript" , "@" , ".png" , ".sit" , ".shx" , ".sbn" , ".mdb" , ".ldb" , ".tif" , ".tfw" , ".aux" , ".atx" , ".rrd" ,
         ".dir" , ".001" , ".mp3" , ".eps" , ".xlsx"
