@@ -5,4 +5,5 @@ class CISEitem(Item):
 	url = Field()
 	referrer = Field()
 	lastUpdated = Field()
+	domain = Field()
 
