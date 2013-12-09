@@ -1,15 +1,14 @@
-import json
 from scrapy.mail import MailSender
-
-
+from datetime import datetime
+from scrapy.signals import spider_closed, spider_opened
 
 class saveToFile(object):
 
     def __init__(self):
         # open files
-    	self.old = open('old_pages.json', 'wb')
-    	self.date = open('pages_without_dates.json', 'wb')
-    	self.missing = open('missing_pages.json', 'wb')
+    	self.old = open('old_pages.txt', 'wb')
+    	self.date = open('pages_without_dates.txt', 'wb')
+    	self.missing = open('missing_pages.txt', 'wb')
 
         # write table headers
         line = "{0:15} {1:40} {2:} \n\n".format("Domain","Last Updated","URL")
@@ -20,10 +19,10 @@ class saveToFile(object):
 
         line = "{0:15} {1:70} {2:} \n\n".format("Domain","Page Containing Broken Link","URL of Broken Link")
         self.missing.write(line)
- 
 
     def process_item(self, item, spider):
         
+        # add items to file as they are scraped
         if item['group'] == "Old Page":
             line = "{0:15} {1:40} {2:} \n".format(item['domain'],item["lastUpdated"],item["url"])
             self.old.write(line)
@@ -36,25 +35,47 @@ class saveToFile(object):
 
         return item
 
+class twentyOldest(object):
+
+    def __init__(self):
+
+        #dispatcher.connect(self.spider_closed, signal=signals.spider_closed)
+
+        # open file
+        self.oldOutput = open('twenty_oldest_pages.txt', 'wb')
+
+        # write table header
+        line = "{0:15} {1:40} {2:} \n\n".format("Domain","Last Updated","URL")
+
+        # create dict for storing oldest pages
+        self.oldest = {'lastUpdatedDateTime':0}
+
+    def process_item(self, item, spider):
+        
+        if item['group'] == "Old Page":
+            # get list of dates from list of oldest pages 
+            listOfValues = [x['lastUpdatedDateTime'] for x in self.oldest]
+            # id item is older than youngest item in the dict, remove that item and add the new one
+            if item['lastUpdatedDateTime'] < min(listOfValues):
+                if len(self.oldest) > 20:
+                    # delete current 'youngest'
+                    place = self.oldest.index(min(self.oldest))
+                    del self.oldest[place]
+                # add new item
+                self.oldest.append(item)
+
+        return item
+
+    def spider_closed(JMUCISE):
+
+        # sort the array based on age
+        self.oldest = sorted(self.oldest, key=lambda k: k['lastUpdatedDateTime']) 
+
+        # write the dict to the file created
+        for item in oldest:
+            line = "{0:15} {1:40} {2:} \n".format(item['domain'],item["lastUpdated"],item["url"])
+            self.oldOutput.write(line)
+
+        return item
 
         
-# class emailResults(object):
-
-#     def __init__(self):
-#         mailer = MailSender()
-#         dispatcher.connect(self.spider_opened, signal=signals.spider_opened)
-#         dispatcher.connect(self.spider_closed, signal=signals.spider_closed)
-    
-#     def spider_opened(self, spider):
-#         log.msg("opened spider  %s at time %s" % (spider.name,datetime.now().strftime('%H-%M-%S')))
-    
-#     def process_item(self, item, spider):
-#             log.msg("Processsing item " + item['title'], level=log.DEBUG)
-    
-    
-#     def spider_closed(JMUCISE):
-#             mailer.send(to=["someone@example.com"], subject="Some subject", body="Some body", cc=["another@example.com"])
-#         log.msg("closed spider %s at %s" % (spider.name,datetime.now().strftime('%H-%M-%S')))
-
-# attachs (iterable) – an iterable of tuples (attach_name, mimetype, file_object) where attach_name is a string with the name that will appear on the e-mail’s attachment, mimetype is the mimetype of the attachment and file_object is a readable file object with the contents of the attachment
-

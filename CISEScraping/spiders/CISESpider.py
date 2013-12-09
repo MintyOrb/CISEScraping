@@ -71,6 +71,8 @@ class CISESpider(BaseSpider):
                         CrawlItem['domain'] = domain
                         CrawlItem["url"] = response.url
                         CrawlItem["lastUpdated"] = readableDate
+                        CrawlItem["lastUpdatedDateTime"] = tempDate
+                        print tempDate
                         yield CrawlItem
 
                 elif not any(name in response.url for name in self.EXCLUDE_FROM_NO_DATE):
