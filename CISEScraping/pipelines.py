@@ -38,7 +38,7 @@ class saveToFile(object):
 class emailResults(object):
 
     def __init__(self):
-        # I need to figure out how to inatialize 
+        # I need to figure out how to inatialize with the correct settings (depends on what is available)
         mailer = MailSender()
 
     def spider_closed(JMUCISE):
