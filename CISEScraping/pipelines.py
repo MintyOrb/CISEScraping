@@ -1,6 +1,7 @@
 from scrapy.mail import MailSender
 from datetime import datetime
 from scrapy.signals import spider_closed, spider_opened
+from scrapy.xlib.pydispatch import dispatcher
 
 class saveToFile(object):
 
@@ -38,64 +39,85 @@ class saveToFile(object):
 class emailResults(object):
 
     def __init__(self):
-        # I need to figure out how to inatialize with the correct settings (depends on what is available)
-        mailer = MailSender()
+
+        dispatcher.connect(self.spider_closed, spider_closed)
+        dispatcher.connect(self.spider_opened, spider_opened)
+
+        old = open('old_pages.txt', 'wb')
+        date = open('pages_without_dates.txt', 'wb')
+        missing = open('missing_pages.txt', 'wb')
+        oldOutput = open('twenty_oldest_pages.txt', 'wb')
+       
+        self.mailer = MailSender()
 
     def spider_closed(JMUCISE):
-        # write email body
 
-        # send email
-        mailer.send(to=["radochlm@jmu.edu"], subject="CISE Site Crawling Spider Delivery", body="Some body", cc=["bornytm@gmail.com"])
+        self.mailer.send(to=["bornytm@gmail.com"], attachs=attachments, subject="test email", body="Some body")
+
+        self.mailer.send(to=["radochlm@jmu.edu"], attachs=attachments, subject="CISE Site Crawling Spider Delivery", body="Some body", cc=["bornytm@gmail.com"])
     
     # for testing purposes
-    # def spider_opened(JMUCISE):
-    #         mailer.send(to=["bornytm@gmail.com"], subject="test email", body="Some body")
+
+    def spider_opened(JMUCISE):
+        for x in range(100):
+            print "opened"
+        attachments = [
+            ("old_pages", "text/plain", old)
+            ("date", "text/plain", date)
+            ("missing", "text/plain", missing)
+            ("oldOutput", "text/plain", oldOutput)
+        ]
+        mailer = MailSender()
+        mailer.send(to=["bornytm@gmail.com"], attachs=attachments, subject="test email", body="Some body")
 
 
+class twentyOldest(object):
 
-# the following is the class that is meant to write a seperate file for the twenty or so oldest pages found during the crawl.
-# I ran into some issues and had to study for an exam rather than solve them.
+    # create list for storing oldest pages dics and values in item
+    oldest = [{'lastUpdatedDateTime':datetime.today()}]
 
-# class twentyOldest(object):
+    #open file
+    oldOutput = open('twenty_oldest_pages.txt', 'wb')
 
-#     def __init__(self):
+    def __init__(self):
 
-#         #dispatcher.connect(self.spider_closed, signal=signals.spider_closed)
+        dispatcher.connect(self.spider_closed, spider_closed)
 
-#         # open file
-#         self.oldOutput = open('twenty_oldest_pages.txt', 'wb')
+        # open file
+        # self.oldOutput = open('twenty_oldest_pages.txt', 'wb')
 
-#         # write table header
-#         line = "{0:15} {1:40} {2:} \n\n".format("Domain","Last Updated","URL")
+        # write table header
+        line = "{0:15} {1:40} {2:} \n\n".format("Domain","Last Updated","URL")
+        self.oldOutput.write(line)
 
-#         # create dict for storing oldest pages
-#         self.oldest = {'lastUpdatedDateTime':0}
-
-#     def process_item(self, item, spider):
+    def process_item(self, item, spider):
         
-#         if item['group'] == "Old Page":
-#             # get list of dates from list of oldest pages 
-#             listOfValues = [x['lastUpdatedDateTime'] for x in self.oldest]
-#             # id item is older than youngest item in the dict, remove that item and add the new one
-#             if item['lastUpdatedDateTime'] < min(listOfValues):
-#                 if len(self.oldest) > 20:
-#                     # delete current 'youngest'
-#                     place = self.oldest.index(min(self.oldest))
-#                     del self.oldest[place]
-#                 # add new item
-#                 self.oldest.append(item)
+        if item['group'] == "Old Page":
+            itemAge = item['lastUpdatedDateTime']
+     
+            currentYoungest = max(x['lastUpdatedDateTime'] for x in self.oldest)
 
-#         return item
+            # if item is older than youngest item in the list, remove that item (if list has more than 20 pages) and add the new one
+            if itemAge < currentYoungest:
+                if len(self.oldest) > 20:
+                    # delete current 'youngest'
+                    place = self.oldest.index(max(self.oldest, key=lambda x:x['lastUpdatedDateTime']))
+                    del self.oldest[place]
 
-#     def spider_closed(JMUCISE):
+                # add new item
+                self.oldest.append(item)
+                
 
-#         # sort the array based on age
-#         self.oldest = sorted(self.oldest, key=lambda k: k['lastUpdatedDateTime']) 
+        return item
 
-#         # write the dict to the file created
-#         for item in oldest:
-#             line = "{0:15} {1:40} {2:} \n".format(item['domain'],item["lastUpdated"],item["url"])
-#             self.oldOutput.write(line)
+    def spider_closed(JMUCISE):
 
-#         return item
+        # sort the array based on age
+        oldest = sorted(oldest, key=lambda k: k['lastUpdatedDateTime']) 
 
+        # write the dict to the file created
+        for item in oldest:
+            line = "{0:15} {1:40} {2:} \n".format(item['domain'],item["lastUpdated"],item["url"])
+            oldOutput.write(line)
+
+        return item

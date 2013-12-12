@@ -21,7 +21,7 @@ class CISESpider(BaseSpider):
         ".zip", ".gif" , ".jpg" , ".jpeg" , ".doc" , ".ppt", ".pptx", ".avi" , ".pdf" , ".rtf", ".mov" , ".mp4" , ".xml" , ".dat" , ".nit" , 
         "google" , "facebook" , "digg" , "delicious" , ".sbx" , ".shp" , ".prj" , ".tgz" , "php?" , ".ps" , ".epx" , ".class" , ".dbf" ,
         "mailto:" , "javascript" , "@" , ".png" , ".sit" , ".shx" , ".sbn" , ".mdb" , ".ldb" , ".tif" , ".tfw" , ".aux" , ".atx" , ".rrd" ,
-        ".dir" , ".001" , ".mp3" , ".eps" , ".xlsx"
+        ".dir" , ".001" , ".mp3" , ".eps" , ".xlsx" , ".swf"
     ]
 
     EXCLUDE_FROM_NO_DATE = [
@@ -66,13 +66,12 @@ class CISESpider(BaseSpider):
                     # convert to python time obj
                     tempDate = datetime.strptime(tempDate, "%A %B %d %Y %I %M %p")
                     # add item if old
-                    if today - tempDate > timedelta(days=365):
+                    if today - tempDate > timedelta(days=90):
                         CrawlItem['group'] = "Old Page"
                         CrawlItem['domain'] = domain
                         CrawlItem["url"] = response.url
                         CrawlItem["lastUpdated"] = readableDate
                         CrawlItem["lastUpdatedDateTime"] = tempDate
-                        print tempDate
                         yield CrawlItem
 
                 elif not any(name in response.url for name in self.EXCLUDE_FROM_NO_DATE):
